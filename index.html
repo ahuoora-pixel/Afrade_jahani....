@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>سامانه هوشمند بیوگرافی</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
+    
+    <style>
+        body {
+            font-family: 'Vazirmatn', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .page-transition {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen pb-24 select-none">
+
+    <header class="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-100 px-4 py-3 flex justify-between items-center shadow-sm">
+        <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white shadow-md shadow-indigo-200">
+                <i class="fa-solid fa-users-rectangle text-sm"></i>
+            </div>
+            <h1 id="header-title" class="text-base font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">خانه</h1>
+        </div>
+        <div class="text-xs bg-slate-100 text-slate-600 px-2.5 py-1 rounded-full font-medium" id="live-count">۰ نفر</div>
+    </header>
+
+    <main class="max-w-md mx-auto px-4 pt-4">
+        
+        <section id="page-home" class="page-transition space-y-6">
+            <div class="flex flex-col items-center justify-center py-6 text-center space-y-4">
+                <div class="space-y-1">
+                    <h2 class="text-xl font-black text-slate-900">جستجوی مشاهیر و نخبگان</h2>
+                    <p class="text-xs text-slate-400">در میان دسته‌بندی‌های مختلف کاوش کنید</p>
+                </div>
+                <div class="w-full relative group">
+                    <input type="text" id="search-input" oninput="handleSearch()" placeholder="نام شخص، تخصص یا کلیدواژه..." class="w-full bg-white border border-slate-200 focus:border-indigo-500 rounded-2xl py-3.5 pr-11 pl-4 text-sm shadow-sm focus:shadow-md outline-none transition-all placeholder:text-slate-400">
+                    <i class="fa-solid fa-magnifying-glass absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors text-base"></i>
+                </div>
+            </div>
+
+            <div class="space-y-2">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-xs font-bold text-slate-400">دسته‌بندی موضوعی</h3>
+                </div>
+                <div class="flex gap-2 overflow-x-auto pb-2 hide-scrollbar snap-x" id="home-categories-container">
+                    </div>
+            </div>
+
+            <div class="space-y-3" id="bios-list-container">
+                </div>
+        </section>
+
+        <section id="page-admin" class="page-transition hidden space-y-6">
+            <div class="bg-slate-200/70 p-1 rounded-xl flex gap-1">
+                <button onclick="switchAdminTab('bios')" id="btn-tab-bios" class="flex-1 py-2 text-xs font-bold rounded-lg transition-all bg-white text-slate-900 shadow-sm">مدیریت افراد</button>
+                <button onclick="switchAdminTab('cats')" id="btn-tab-cats" class="flex-1 py-2 text-xs font-bold rounded-lg transition-all text-slate-500">مدیریت دسته‌ها</button>
+            </div>
+
+            <div id="admin-sub-bios" class="space-y-4">
+                <form id="bio-form" onsubmit="saveBiography(event)" class="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm space-y-3.5">
+                    <input type="hidden" id="bio-id">
+                    <h3 id="form-title" class="text-sm font-bold text-slate-900 border-b border-slate-100 pb-2"><i class="fa-solid fa-user-plus text-indigo-500 ml-1.5"></i>افزودن شخص جدید</h3>
+                    
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="space-y-1">
+                            <label class="text-[11px] font-bold text-slate-500">نام و نام خانوادگی</label>
+                            <input type="text" id="bio-name" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs outline-none focus:border-indigo-500 transition-colors">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[11px] font-bold text-slate-500">دسته‌بندی</label>
+                            <select id="bio-category" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs outline-none focus:border-indigo-500 transition-colors">
+                                </select>
+                        </div>
+                    </div>
+
+                    <div class="space-y-1">
+                        <label class="text-[11px] font-bold text-slate-500">تصویر شخص</label>
+                        <div class="flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-xl p-2">
+                            <label class="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 text-xs font-bold px-3 py-2 rounded-lg cursor-pointer transition-colors whitespace-nowrap">
+                                <i class="fa-solid fa-cloud-arrow-up ml-1"></i>انتخاب فایل عکس
+                                <input type="file" id="bio-image-file" accept="image/*" onchange="processImage(this)" class="hidden">
+                            </label>
+                            <div id="image-preview-status" class="text-[11px] text-slate-400 truncate">تصویری انتخاب نشده است</div>
+                            <input type="hidden" id="bio-image-base64">
+                        </div>
+                    </div>
+
+                    <div class="space-y-1">
+                        <label class="text-[11px] font-bold text-slate-500">شرح بیوگرافی و اطلاعات مهم</label>
+                        <textarea id="bio-desc" rows="4" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs outline-none focus:border-indigo-500 transition-colors resize-none leading-relaxed"></textarea>
+                    </div>
+
+                    <div class="flex gap-2 pt-1">
+                        <button type="submit" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-3 rounded-xl shadow-md shadow-indigo-100 transition-colors">ذخیره اطلاعات</button>
+                        <button type="button" id="btn-cancel-edit" onclick="resetBioForm()" class="hidden bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold px-4 rounded-xl transition-colors">انصراف</button>
+                    </div>
+                </form>
+
+                <div class="space-y-2" id="admin-bios-list">
+                    </div>
+            </div>
+
+            <div id="admin-sub-cats" class="hidden space-y-4">
+                <div class="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm space-y-3">
+                    <h3 class="text-sm font-bold text-slate-900 border-b border-slate-100 pb-2"><i class="fa-solid fa-tags text-indigo-500 ml-1.5"></i>افزودن دسته‌بندی جدید</h3>
+                    <div class="flex gap-2">
+                        <input type="text" id="new-cat-input" placeholder="مثلا: ورزشی، هنری..." class="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 text-xs outline-none focus:border-indigo-500 transition-colors">
+                        <button onclick="addCategory()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-4 py-3 rounded-xl transition-colors">افزودن</button>
+                    </div>
+                </div>
+
+                <div class="bg-white border border-slate-100 rounded-2xl p-3 shadow-sm">
+                    <div class="text-xs font-bold text-slate-400 mb-3 px-1">لیست دسته‌بندی‌های فعال</div>
+                    <div id="admin-cats-list" class="flex flex-col divide-y divide-slate-100">
+                        </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="page-about" class="page-transition hidden space-y-4">
+            <div id="about-view-card" class="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm space-y-5 relative">
+                <button onclick="enableAboutEdit()" class="absolute top-4 left-4 text-slate-400 hover:text-indigo-600 p-1 transition-colors"><i class="fa-solid fa-pen-to-square text-base"></i></button>
+                <div class="text-center space-y-2 border-b border-slate-50 pb-4">
+                    <div class="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-2xl mx-auto flex items-center justify-center text-2xl shadow-inner"><i class="fa-solid fa-address-card"></i></div>
+                    <h3 id="display-site-name" class="text-base font-black text-slate-900">درباره سایت</h3>
+                </div>
+                <div class="space-y-4 text-xs leading-relaxed">
+                    <div class="bg-slate-50 p-3 rounded-xl border border-slate-100/50">
+                        <span class="font-bold text-slate-400 block mb-1">مدیر سایت</span>
+                        <p id="display-manager-name" class="text-slate-800 font-medium"></p>
+                    </div>
+                    <div class="bg-slate-50 p-3 rounded-xl border border-slate-100/50">
+                        <span class="font-bold text-slate-400 block mb-1">توسعه‌دهنده سیستم</span>
+                        <p id="display-dev-name" class="text-slate-800 font-medium"></p>
+                    </div>
+                    <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-100/50">
+                        <span class="font-bold text-slate-400 block mb-1.5">توضیحات و اهداف پروژه</span>
+                        <p id="display-site-desc" class="text-slate-600 text-justify whitespace-pre-line"></p>
+                    </div>
+                </div>
+            </div>
+
+            <form id="about-edit-form" onsubmit="saveAboutData(event)" class="hidden bg-white border border-slate-100 rounded-2xl p-4 shadow-sm space-y-3.5">
+                <h3 class="text-sm font-bold text-slate-900 border-b border-slate-100 pb-2"><i class="fa-solid fa-user-gear text-indigo-500 ml-1.5"></i>ویرایش اطلاعات درباره ما</h3>
+                <div class="space-y-1">
+                    <label class="text-[11px] font-bold text-slate-500">نام مدیر سایت</label>
+                    <input type="text" id="edit-manager-name" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs outline-none focus:border-indigo-500 transition-colors">
+                </div>
+                <div class="space-y-1">
+                    <label class="text-[11px] font-bold text-slate-500">نام توسعه‌دهنده</label>
+                    <input type="text" id="edit-dev-name" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs outline-none focus:border-indigo-500 transition-colors">
+                </div>
+                <div class="space-y-1">
+                    <label class="text-[11px] font-bold text-slate-500">توضیحات سایت</label>
+                    <textarea id="edit-site-desc" rows="5" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs outline-none focus:border-indigo-500 transition-colors resize-none leading-relaxed"></textarea>
+                </div>
+                <div class="flex gap-2 pt-1">
+                    <button type="submit" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-2.5 rounded-xl transition-colors">ذخیره تغییرات</button>
+                    <button type="button" onclick="disableAboutEdit()" class="bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold px-4 rounded-xl transition-colors">انصراف</button>
+                </div>
+            </form>
+        </section>
+
+    </main>
+
+    <div id="detail-modal" class="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/60 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300">
+        <div id="modal-content" class="w-full max-w-md bg-white rounded-t-3xl max-h-[85vh] overflow-y-auto p-5 space-y-4 transform translate-y-full transition-transform duration-300 shadow-2xl">
+            <div class="flex justify-between items-start border-b border-slate-100 pb-3">
+                <div class="space-y-1">
+                    <h3 id="modal-name" class="text-base font-black text-slate-900"></h3>
+                    <span id="modal-cat" class="inline-block bg-indigo-50 text-indigo-600 text-[10px] font-bold px-2 py-0.5 rounded-md"></span>
+                </div>
+                <button onclick="closeModal()" class="w-7 h-7 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors"><i class="fa-solid fa-xmark text-sm"></i></button>
+            </div>
+            <div class="w-full aspect-[4/3] rounded-2xl overflow-hidden bg-slate-100 shadow-sm" id="modal-img-container">
+                </div>
+            <p id="modal-desc" class="text-xs text-slate-600 leading-relaxed text-justify whitespace-pre-line bg-slate-50 p-4 rounded-xl border border-slate-100"></p>
+        </div>
+    </div>
+
+    <nav class="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-100 shadow-[0_-4px_20px_rgba(0,0,0,0.03)] px-6 py-2 flex justify-around max-w-md mx-auto rounded-t-2xl">
+        <button onclick="switchTab('home')" id="nav-home" class="flex flex-col items-center gap-1 py-1 text-indigo-600 transition-all duration-300 scale-105">
+            <div class="w-10 h-6 flex items-center justify-center rounded-full bg-indigo-50 text-indigo-600 transition-all" id="nav-bg-home"><i class="fa-solid fa-house-chimney text-base"></i></div>
+            <span class="text-[10px] font-bold">خانه</span>
+        </button>
+        <button onclick="switchTab('admin')" id="nav-admin" class="flex flex-col items-center gap-1 py-1 text-slate-400 transition-all duration-300">
+            <div class="w-10 h-6 flex items-center justify-center rounded-full bg-transparent text-slate-400 transition-all" id="nav-bg-admin"><i class="fa-solid fa-sliders text-base"></i></div>
+            <span class="text-[10px] font-bold">مدیریت</span>
+        </button>
+        <button onclick="switchTab('about')" id="nav-about" class="flex flex-col items-center gap-1 py-1 text-slate-400 transition-all duration-300">
+            <div class="w-10 h-6 flex items-center justify-center rounded-full bg-transparent text-slate-400 transition-all" id="nav-bg-about"><i class="fa-solid fa-circle-info text-base"></i></div>
+            <span class="text-[10px] font-bold">درباره ما</span>
+        </button>
+    </nav>
+
+    <script>
+        // --- Core Application State ---
+        let biographies = [];
+        let categories = [];
+        let aboutData = {};
+        
+        let currentTab = 'home';
+        let currentAdminTab = 'bios';
+        let selectedCategoryFilter = 'all';
+        let searchQuery = '';
+
+        // --- Default Placeholder Data ---
+        const defaultCategories = ['دین و روحانیت', 'اقتصاد و تجارت', 'سینما و تئاتر', 'علم و فناوری', 'شعر و ادبیات'];
+        
+        const defaultBios = [
+            {
+                id: '1',
+                name: 'پروفسور مریم میرزاخانی',
+                category: 'علم و فناوری',
+                desc: 'مریم میرزاخانی ریاضی‌دان ایرانی و استاد دانشگاه استنفورد بود. وی در سال ۲۰۱۴ به دلیل کار بر روی «دینامیک و هندسه سطوح ریمانی و فضاهای پیمانه‌ای آنها» برنده مدال فیلدز شد که بالاترین جایزه در ریاضیات است. وی نخستین زن و نخستین ایرانی برنده این مدال است که به عنوان نوبل ریاضیات شناخته می‌شود. میرزاخانی در دوران تحصیل در دبیرستان فرزانگان تهران، دو بار برنده مدال طلای المپیاد جهانی ریاضی شد.',
+                image: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300"><rect width="100%" height="100%" fill="%23e0e7ff"/><text x="50%" y="50%" font-family="sans-serif" font-size="24" font-weight="bold" fill="%234f46e5" dominant-baseline="middle" text-anchor="middle">پروفسور مریم میرزاخانی</text></svg>'
+            },
+            {
+                id: '2',
+                name: 'استاد محمدرضا شجریان',
+                category: 'سینما و تئاتر',
+                desc: 'محمدرضا شجریان موسیقی‌دان، آهنگ‌ساز، خواننده و خوش‌نویس سرشناس اهل ایران بود. وی از برجسته‌ترین هنرمندان موسیقی سنتی ایرانی به شمار می‌رفت و آلبوم‌های ماندگار فراوانی را خلق نمود. او به دلیل توانایی بی‌نظیر در اجرای آواز و قرائت‌های منحصر به فرد، در میان توده‌های مردم به محبوبیت عظیمی دست یافت و عنوان خسرو آواز ایران را به خود اختصاص داد.',
+                image: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300"><rect width="100%" height="100%" fill="%23f3e8ff"/><text x="50%" y="50%" font-family="sans-serif" font-size="24" font-weight="bold" fill="%239333ea" dominant-baseline="middle" text-anchor="middle">استاد محمدرضا شجریان</text></svg>'
+            }
+        ];
+
+        const defaultAbout = {
+            manager: 'علیرضا حسینی',
+            developer: 'امیررضا کریمی',
+            desc: 'این سامانه پیشرفته با هدف جمع‌آوری، دسته‌بندی و معرفی بیوگرافی‌های جامع مفاخر، نخبگان و افراد تاثیرگذار در حوزه‌های مختلف علمی، فرهنگی، مذهبی و اقتصادی طراحی شده است.\n\nطراحی سیستم به صورت کاملاً Mobile-First پیاده‌سازی شده تا بیشترین سرعت، کارایی و روانی اسکرول را بر روی دستگاه‌های هوشمند فراهم آورد.'
+        };
+
+        // --- Initialization ---
+        window.addEventListener('DOMContentLoaded', () => {
+            initStorage();
+            refreshUI();
+        });
+
+        function initStorage() {
+            if (!localStorage.getItem('bios_data')) {
+                localStorage.setItem('bios_data', JSON.stringify(defaultBios));
+            }
+            if (!localStorage.getItem('cats_data')) {
+                localStorage.setItem('cats_data', JSON.stringify(defaultCategories));
+            }
+            if (!localStorage.getItem('about_data')) {
+                localStorage.setItem('about_data', JSON.stringify(defaultAbout));
+            }
+
+            biographies = JSON.parse(localStorage.getItem('bios_data'));
+            categories = JSON.parse(localStorage.getItem('cats_data'));
+            aboutData = JSON.parse(localStorage.getItem('about_data'));
+        }
+
+        function updateStorage(key, data) {
+            localStorage.setItem(key, JSON.stringify(data));
+        }
+
+        // --- UI Refresher Coordinator ---
+        function refreshUI() {
+            document.getElementById('live-count').innerText = `${biographies.length} نفر`;
+            
+            renderHomeCategories();
+            renderBiosList();
+            renderAdminCategories();
+            renderAdminBios();
+            renderAboutData();
+            populateCategorySelect();
+        }
+
+        // --- Navigation System ---
+        function switchTab(tab) {
+            currentTab = tab;
+            
+            // Sections visibility toggle
+            ['home', 'admin', 'about'].forEach(t => {
+                const element = document.getElementById(`page-${t}`);
+                if (t === tab) {
+                    element.classList.remove('hidden');
+                    setTimeout(() => element.classList.remove('opacity-0'), 10);
+                } else {
+                    element.classList.add('hidden');
+                }
+            });
+
+            // Navigation Button styling updates
+            ['home', 'admin', 'about'].forEach(t => {
+                const navBtn = document.getElementById(`nav-${t}`);
+  
